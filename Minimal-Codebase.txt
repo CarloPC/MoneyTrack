@@ -483,6 +483,7 @@ import { AuthProvider, useAuth } from './AuthContext';
 import { FinanceProvider } from './FinanceContext';
 import AuthPage from './Authpage';
 import Dashboard from './Dashboard';
+import OfflineBanner from './OfflineBanner';
 
 function AppInner() {
   const { user, loading } = useAuth();
@@ -502,6 +503,7 @@ function AppInner() {
 export default function App() {
   return (
     <AuthProvider>
+      <OfflineBanner />
       <AppInner />
     </AuthProvider>
   );
@@ -835,13 +837,15 @@ export default function AuthPage() {
 
 == FILE: C:\Users\Admin\Documents\Lenet\money-tracker\src\Dashboard.jsx ==
 
+
 import { useEffect, useState } from 'react';
 import { useAuth } from './AuthContext';
 import { useFinance } from './FinanceContext';
 import EntryModal from './EntryModal';
 import AdminDashboard from './AdminDashboard';
+import useInstallPrompt from './useInstallPrompt';
 import styles from './Dashboard.module.css';
-import { LogOut, Plus, TrendingUp, TrendingDown, Wallet, Edit2, Trash2, Search, ShieldCheck, Menu, X } from 'lucide-react';
+import { LogOut, Plus, TrendingUp, TrendingDown, Wallet, Edit2, Trash2, Search, ShieldCheck, Menu, X, Download, Check } from 'lucide-react';
 
 const fmt = (n) => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP', minimumFractionDigits: 2 }).format(n);
 
@@ -863,7 +867,9 @@ export default function Dashboard() {
   const [showAdminView, setShowAdminView] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+  const [showIosHint, setShowIosHint] = useState(false);
   const isAdmin = user?.isAdmin === true;
+  const { canInstall, promptInstall, isInstalled, isIos } = useInstallPrompt();
 
   useEffect(() => {
     const handleResize = () => {
@@ -875,6 +881,14 @@ export default function Dashboard() {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  const handleInstallClick = () => {
+    if (canInstall) {
+      promptInstall();
+    } else if (isIos) {
+      setShowIosHint(true);
+    }
+  };
 
   const filtered = entries
     .filter(e => {
@@ -920,6 +934,25 @@ export default function Dashboard() {
         <nav className={styles.nav}>
           <button className={styles.navItem + ' ' + styles.navActive}><Wallet size={16}/>Overview</button>
         </nav>
+
+        {!isInstalled && (canInstall || isIos) && (
+          <div className={styles.installWrap}>
+            <button className={styles.installBtn} onClick={handleInstallClick}>
+              <Download size={14}/> Install App
+            </button>
+            {showIosHint && (
+              <div className={styles.iosHint}>
+                <p>To install: tap the <strong>Share</strong> icon in Safari, then <strong>"Add to Home Screen"</strong>.</p>
+                <button onClick={() => setShowIosHint(false)}>Got it</button>
+              </div>
+            )}
+          </div>
+        )}
+        {isInstalled && (
+          <div className={styles.installedBadge}>
+            <Check size={14}/> App installed
+          </div>
+        )}
 
         <button className={styles.logoutBtn} onClick={logout}><LogOut size={14}/> Sign Out</button>
       </aside>
@@ -1411,6 +1444,58 @@ export default function Dashboard() {
   .tableControls { flex-direction: column; align-items: flex-start; }
 }
 
+/* ==== PWA install button — add this block into Dashboard.module.css,
+   right after the existing .logoutBtn / .logoutBtn:hover rules ==== */
+
+.installWrap {
+  position: relative;
+  margin-bottom: 4px;
+}
+
+.installBtn {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%;
+  background: rgba(124,107,255,0.12);
+  color: var(--accent);
+  border: 1px solid rgba(124,107,255,0.25);
+  font-size: 13px; font-weight: 600; font-family: var(--font);
+  padding: 10px 12px; border-radius: 10px;
+  transition: background 0.15s, transform 0.15s;
+}
+.installBtn:hover {
+  background: rgba(124,107,255,0.2);
+  transform: translateY(-1px);
+}
+
+.installedBadge {
+  display: flex; align-items: center; gap: 8px;
+  color: var(--green);
+  font-size: 12px; font-weight: 600; font-family: var(--font);
+  padding: 10px 12px; margin-bottom: 4px;
+}
+
+.iosHint {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0; right: 0;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  font-size: 12px;
+  color: var(--text);
+  z-index: 30;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+.iosHint p { margin-bottom: 8px; line-height: 1.4; }
+.iosHint button {
+  background: var(--accent);
+  color: white;
+  font-size: 12px; font-weight: 600;
+  padding: 6px 12px; border-radius: 8px;
+  width: 100%;
+}
+
 == FILE: C:\Users\Admin\Documents\Lenet\money-tracker\src\EntryModal.jsx ==
 
 import { useState, useEffect } from 'react';
@@ -1530,7 +1615,7 @@ export default function EntryModal({ entry, onClose }) {
   );
 }
 
-== FILE: C:\Users\Admin\Documents\Lenet\money-tracker\src\Entrymodal.module.css ==
+== FILE: C:\Users\Admin\Documents\Lenet\money-tracker\src\EntryModal.module.css ==
 
 .overlay {
   position: fixed; inset: 0; z-index: 100;
@@ -1791,9 +1876,151 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
+import { registerSW } from 'virtual:pwa-register'
+
+// Registers the service worker generated by vite-plugin-pwa so the app can
+// be installed and works offline. `autoUpdate` means new versions are
+// fetched and swapped in silently on the next load.
+registerSW({ immediate: true })
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <App />
   </StrictMode>,
 )
+
+== FILE: C:\Users\Admin\Documents\Lenet\money-tracker\src\OfflineBanner.jsx ==
+
+import { useEffect, useState } from 'react';
+import { WifiOff } from 'lucide-react';
+import styles from './OfflineBanner.module.css';
+
+// Shows a red banner across the top of the app whenever the browser loses
+// its internet connection, and a brief green "back online" confirmation
+// when it reconnects.
+export default function OfflineBanner() {
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [showReconnected, setShowReconnected] = useState(false);
+
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      setShowReconnected(true);
+      setTimeout(() => setShowReconnected(false), 2500);
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      setShowReconnected(false);
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  if (isOnline && !showReconnected) return null;
+
+  return (
+    <div className={`${styles.banner} ${isOnline ? styles.online : styles.offline}`}>
+      <WifiOff size={14} />
+      <span>{isOnline ? 'Back online' : 'No internet connection — some features may not work.'}</span>
+    </div>
+  );
+}
+
+== FILE: C:\Users\Admin\Documents\Lenet\money-tracker\src\OfflineBanner.module.css ==
+
+.banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font);
+  color: white;
+  animation: slideDown 0.25s ease;
+}
+
+.offline {
+  background: var(--red);
+}
+
+.online {
+  background: var(--green);
+  color: #0a0a0f;
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
+
+== FILE: C:\Users\Admin\Documents\Lenet\money-tracker\src\useInstallPrompt.js ==
+
+import { useEffect, useState } from 'react';
+
+// Captures the browser's `beforeinstallprompt` event so we can trigger the
+// native "Install app" dialog from our own UI (the sidebar button), instead
+// of relying on the browser's built-in address-bar icon.
+//
+// Notes on platform support:
+// - Android Chrome / Edge: fires `beforeinstallprompt`, `promptInstall()` works.
+// - Desktop Chrome / Edge: same as above.
+// - iOS Safari: does NOT support `beforeinstallprompt` at all. There is no
+//   programmatic install API on iOS — the user has to use
+//   Share -> "Add to Home Screen" manually. We detect this case separately
+//   so the UI can show instructions instead of a broken button.
+export default function useInstallPrompt() {
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [isInstalled, setIsInstalled] = useState(false);
+  const [isIos, setIsIos] = useState(false);
+
+  useEffect(() => {
+    const ua = window.navigator.userAgent;
+    const iosDevice = /iphone|ipad|ipod/i.test(ua);
+    setIsIos(iosDevice);
+
+    const standalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      window.navigator.standalone === true;
+    setIsInstalled(standalone);
+
+    const handleBeforeInstallPrompt = (event) => {
+      event.preventDefault();
+      setDeferredPrompt(event);
+    };
+    const handleAppInstalled = () => {
+      setDeferredPrompt(null);
+      setIsInstalled(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, []);
+
+  const promptInstall = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    setDeferredPrompt(null);
+  };
+
+  // canInstall: a real one-tap install is available right now.
+  const canInstall = Boolean(deferredPrompt) && !isInstalled;
+
+  return { canInstall, promptInstall, isInstalled, isIos };
+}

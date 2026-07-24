@@ -28,9 +28,16 @@ export default function Dashboard() {
   const [showAdminView, setShowAdminView] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
-  const [showIosHint, setShowIosHint] = useState(false);
+  const [showInstallHint, setShowInstallHint] = useState(false);
   const isAdmin = user?.isAdmin === true;
-  const { canInstall, promptInstall, isInstalled, isIos } = useInstallPrompt();
+  const { canInstall, promptInstall, isInstalled, platform } = useInstallPrompt();
+
+  const installHintText = {
+    ios: 'Tap the Share icon in Safari, then "Add to Home Screen".',
+    android: 'Open the browser menu (⋮) and tap "Install app" or "Add to Home screen".',
+    desktop: 'Click the install icon in your browser\'s address bar, or open the browser menu and choose "Install IponTrack…".',
+    other: 'Open your browser menu and look for "Install app" or "Add to Home screen".',
+  }[platform];
 
   useEffect(() => {
     const handleResize = () => {
@@ -43,11 +50,14 @@ export default function Dashboard() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const handleInstallClick = () => {
+  const handleInstallClick = async () => {
     if (canInstall) {
-      promptInstall();
-    } else if (isIos) {
-      setShowIosHint(true);
+      await promptInstall();
+    } else {
+      // No native prompt available (common on first visits, iOS Safari,
+      // or plain-http/local testing) — show manual steps instead of doing
+      // nothing.
+      setShowInstallHint((current) => !current);
     }
   };
 
@@ -96,15 +106,15 @@ export default function Dashboard() {
           <button className={styles.navItem + ' ' + styles.navActive}><Wallet size={16}/>Overview</button>
         </nav>
 
-        {!isInstalled && (canInstall || isIos) && (
+        {!isInstalled && (
           <div className={styles.installWrap}>
             <button className={styles.installBtn} onClick={handleInstallClick}>
               <Download size={14}/> Install App
             </button>
-            {showIosHint && (
+            {showInstallHint && (
               <div className={styles.iosHint}>
-                <p>To install: tap the <strong>Share</strong> icon in Safari, then <strong>"Add to Home Screen"</strong>.</p>
-                <button onClick={() => setShowIosHint(false)}>Got it</button>
+                <p>{installHintText}</p>
+                <button onClick={() => setShowInstallHint(false)}>Got it</button>
               </div>
             )}
           </div>
