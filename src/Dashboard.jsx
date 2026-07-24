@@ -1,10 +1,12 @@
+
 import { useEffect, useState } from 'react';
 import { useAuth } from './AuthContext';
 import { useFinance } from './FinanceContext';
 import EntryModal from './EntryModal';
 import AdminDashboard from './AdminDashboard';
+import useInstallPrompt from './useInstallPrompt';
 import styles from './Dashboard.module.css';
-import { LogOut, Plus, TrendingUp, TrendingDown, Wallet, Edit2, Trash2, Search, ShieldCheck, Menu, X } from 'lucide-react';
+import { LogOut, Plus, TrendingUp, TrendingDown, Wallet, Edit2, Trash2, Search, ShieldCheck, Menu, X, Download, Check } from 'lucide-react';
 
 const fmt = (n) => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP', minimumFractionDigits: 2 }).format(n);
 
@@ -26,7 +28,9 @@ export default function Dashboard() {
   const [showAdminView, setShowAdminView] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+  const [showIosHint, setShowIosHint] = useState(false);
   const isAdmin = user?.isAdmin === true;
+  const { canInstall, promptInstall, isInstalled, isIos } = useInstallPrompt();
 
   useEffect(() => {
     const handleResize = () => {
@@ -38,6 +42,14 @@ export default function Dashboard() {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  const handleInstallClick = () => {
+    if (canInstall) {
+      promptInstall();
+    } else if (isIos) {
+      setShowIosHint(true);
+    }
+  };
 
   const filtered = entries
     .filter(e => {
@@ -83,6 +95,25 @@ export default function Dashboard() {
         <nav className={styles.nav}>
           <button className={styles.navItem + ' ' + styles.navActive}><Wallet size={16}/>Overview</button>
         </nav>
+
+        {!isInstalled && (canInstall || isIos) && (
+          <div className={styles.installWrap}>
+            <button className={styles.installBtn} onClick={handleInstallClick}>
+              <Download size={14}/> Install App
+            </button>
+            {showIosHint && (
+              <div className={styles.iosHint}>
+                <p>To install: tap the <strong>Share</strong> icon in Safari, then <strong>"Add to Home Screen"</strong>.</p>
+                <button onClick={() => setShowIosHint(false)}>Got it</button>
+              </div>
+            )}
+          </div>
+        )}
+        {isInstalled && (
+          <div className={styles.installedBadge}>
+            <Check size={14}/> App installed
+          </div>
+        )}
 
         <button className={styles.logoutBtn} onClick={logout}><LogOut size={14}/> Sign Out</button>
       </aside>

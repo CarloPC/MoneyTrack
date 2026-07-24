@@ -1,0 +1,31 @@
+.banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font);
+  color: white;
+  animation: slideDown 0.25s ease;
+}
+
+.offline {
+  background: var(--red);
+}
+
+.online {
+  background: var(--green);
+  color: #0a0a0f;
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}

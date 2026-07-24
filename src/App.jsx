@@ -2,6 +2,7 @@ import { AuthProvider, useAuth } from './AuthContext';
 import { FinanceProvider } from './FinanceContext';
 import AuthPage from './Authpage';
 import Dashboard from './Dashboard';
+import OfflineBanner from './OfflineBanner';
 
 function AppInner() {
   const { user, loading } = useAuth();
@@ -21,6 +22,7 @@ function AppInner() {
 export default function App() {
   return (
     <AuthProvider>
+      <OfflineBanner />
       <AppInner />
     </AuthProvider>
   );
