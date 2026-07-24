@@ -36,3 +36,12 @@ input, select { outline: none; }
   0%, 100% { box-shadow: 0 0 20px rgba(124,107,255,0.3); }
   50% { box-shadow: 0 0 40px rgba(124,107,255,0.6); }
 }
+/* Add this near the top of src/index.css, right after the
+   `html, body, #root { height: 100%; }` rule.
+   Prevents any stray wide element from ever pushing the page sideways
+   and triggering the browser's "shrink to fit" zoom-out behavior. */
+
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+}

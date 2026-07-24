@@ -130,6 +130,7 @@ export default function Dashboard() {
 
       {/* Main */}
       <main className={`${styles.main} ${!sidebarOpen ? styles.mainNoSidebar : ''}`}>
+      <div className={styles.mainInner}>
         <header className={styles.header}>
           <div className={styles.headerLeft}>
             <button className={styles.menuBtn} onClick={() => setSidebarOpen((current) => !current)}>
@@ -218,32 +219,34 @@ export default function Dashboard() {
                 <span>No deleted transactions found.</span>
               </div>
             ) : (
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th>Details</th>
-                    <th>Amount</th>
-                    <th>Date</th>
-                    <th>Reason</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {deletedFiltered.map(entry => (
-                    <tr key={entry.id} className={styles.row}>
-                      <td className={styles.details}>{entry.details}</td>
-                      <td className={Number(entry.amount) >= 0 ? styles.amtPos : styles.amtNeg}>
-                        {Number(entry.amount) >= 0 ? '+' : ''}{fmt(entry.amount)}
-                      </td>
-                      <td className={styles.date}>{entry.date}</td>
-                      <td className={styles.reason}>{entry.reason || '—'}</td>
-                      <td className={styles.actions}>
-                        <button className={styles.restoreBtn} onClick={() => restoreTransaction(entry.id)} title="Restore">Restore</button>
-                      </td>
+              <div className={styles.tableScroll}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Details</th>
+                      <th>Amount</th>
+                      <th>Date</th>
+                      <th>Reason</th>
+                      <th></th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {deletedFiltered.map(entry => (
+                      <tr key={entry.id} className={styles.row}>
+                        <td className={styles.details}>{entry.details}</td>
+                        <td className={Number(entry.amount) >= 0 ? styles.amtPos : styles.amtNeg}>
+                          {Number(entry.amount) >= 0 ? '+' : ''}{fmt(entry.amount)}
+                        </td>
+                        <td className={styles.date}>{entry.date}</td>
+                        <td className={styles.reason}>{entry.reason || '—'}</td>
+                        <td className={styles.actions}>
+                          <button className={styles.restoreBtn} onClick={() => restoreTransaction(entry.id)} title="Restore">Restore</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )
           ) : (
             filtered.length === 0 ? (
@@ -252,38 +255,41 @@ export default function Dashboard() {
                 <button onClick={() => setModal('add')}>+ Add your first entry</button>
               </div>
             ) : (
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th>Details</th>
-                    <th>Amount</th>
-                    <th>Date</th>
-                    <th>Reason</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map(entry => (
-                    <tr key={entry.id} className={styles.row}>
-                      <td className={styles.details}>{entry.details}</td>
-                      <td className={Number(entry.amount) >= 0 ? styles.amtPos : styles.amtNeg}>
-                        {Number(entry.amount) >= 0 ? '+' : ''}{fmt(entry.amount)}
-                      </td>
-                      <td className={styles.date}>{entry.date}</td>
-                      <td className={styles.reason}>{entry.reason || '—'}</td>
-                      <td className={styles.actions}>
-                        <button className={styles.editBtn} onClick={() => setModal({ entry })} title="Edit"><Edit2 size={14}/></button>
-                        <button className={styles.delBtn} onClick={() => { if (confirm('Delete this entry?')) deleteEntry(entry.id); }} title="Delete"><Trash2 size={14}/></button>
-                      </td>
+              <div className={styles.tableScroll}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Details</th>
+                      <th>Amount</th>
+                      <th>Date</th>
+                      <th>Reason</th>
+                      <th></th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {filtered.map(entry => (
+                      <tr key={entry.id} className={styles.row}>
+                        <td className={styles.details}>{entry.details}</td>
+                        <td className={Number(entry.amount) >= 0 ? styles.amtPos : styles.amtNeg}>
+                          {Number(entry.amount) >= 0 ? '+' : ''}{fmt(entry.amount)}
+                        </td>
+                        <td className={styles.date}>{entry.date}</td>
+                        <td className={styles.reason}>{entry.reason || '—'}</td>
+                        <td className={styles.actions}>
+                          <button className={styles.editBtn} onClick={() => setModal({ entry })} title="Edit"><Edit2 size={14}/></button>
+                          <button className={styles.delBtn} onClick={() => { if (confirm('Delete this entry?')) deleteEntry(entry.id); }} title="Delete"><Trash2 size={14}/></button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )
           )}
         </div>
           </>
         )}
+      </div>
       </main>
 
       {modal && (

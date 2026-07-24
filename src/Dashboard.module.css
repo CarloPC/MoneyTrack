@@ -366,3 +366,74 @@
   padding: 6px 12px; border-radius: 8px;
   width: 100%;
 }
+/* ============================================================
+   MOBILE SIZING + DESKTOP CENTERING FIX
+   Paste these rules into src/Dashboard.module.css.
+   They REPLACE the old .main rule and the old @media blocks at
+   the bottom of the file — see instructions below.
+   ============================================================ */
+
+/* ---- 1. Replace the existing .main rule with this ---- */
+.main {
+  flex: 1;
+  margin-left: 220px;
+  padding: 32px 36px;
+  position: relative; z-index: 1;
+  animation: fadeUp 0.4s ease;
+  display: flex;
+  justify-content: center;   /* centers content on wide desktop screens */
+  min-width: 0;               /* allows flex child to shrink instead of overflowing */
+}
+
+/* NEW — the actual content now lives inside this, capped and centered */
+.mainInner {
+  width: 100%;
+  max-width: 1100px;
+  min-width: 0;
+}
+
+/* ---- 2. Table horizontal scroll instead of clipping/overflowing the page ---- */
+.tableScroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.tableScroll .table {
+  min-width: 640px; /* keeps columns readable; scrolls instead of squeezing/overflowing */
+}
+
+/* ---- 3. Replace the two @media blocks at the bottom of the file with these ---- */
+@media (max-width: 900px) {
+  .sidebar {
+    width: 220px;
+    padding: 20px 16px;
+  }
+  .main {
+    margin-left: 0;
+    padding: 20px 18px;
+  }
+  .stats { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+  .sidebar {
+    width: 220px;
+    padding: 20px 16px;
+  }
+  .main { margin-left: 0; padding: 16px 14px; }
+  .header { flex-direction: column; gap: 12px; align-items: stretch; }
+  .headerActions { flex-wrap: wrap; }
+  .headerActions button { flex: 1 1 auto; justify-content: center; }
+  .tableControls { flex-direction: column; align-items: stretch; }
+  .searchBox { width: 100%; }
+  .searchBox input { width: 100%; }
+  .greeting { font-size: 21px; }
+  .statValue { font-size: 21px; }
+  .adminSummary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .adminControls { align-items: stretch; }
+  .adminSelect { min-width: 0; width: 100%; }
+}
+
+@media (max-width: 380px) {
+  .greeting { font-size: 19px; }
+  .statCard { padding: 18px 16px; }
+}

@@ -156,28 +156,30 @@ export default function AdminDashboard({ onClose, useTransactionSubcollection = 
               {activeTransactions.length === 0 ? (
                 <div className={styles.empty}>No active transactions found.</div>
               ) : (
-                <table className={styles.table}>
-                  <thead>
-                    <tr>
-                      <th>Details</th>
-                      <th>Amount</th>
-                      <th>Date</th>
-                      <th>Reason</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {activeTransactions.map((entry) => (
-                      <tr key={entry.id} className={styles.row}>
-                        <td className={styles.details}>{entry.details}</td>
-                        <td className={Number(entry.amount) >= 0 ? styles.amtPos : styles.amtNeg}>
-                          {Number(entry.amount) >= 0 ? '+' : ''}{entry.amount}
-                        </td>
-                        <td className={styles.date}>{entry.date}</td>
-                        <td className={styles.reason}>{entry.reason || '—'}</td>
+                <div className={styles.tableScroll}>
+                  <table className={styles.table}>
+                    <thead>
+                      <tr>
+                        <th>Details</th>
+                        <th>Amount</th>
+                        <th>Date</th>
+                        <th>Reason</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {activeTransactions.map((entry) => (
+                        <tr key={entry.id} className={styles.row}>
+                          <td className={styles.details}>{entry.details}</td>
+                          <td className={Number(entry.amount) >= 0 ? styles.amtPos : styles.amtNeg}>
+                            {Number(entry.amount) >= 0 ? '+' : ''}{entry.amount}
+                          </td>
+                          <td className={styles.date}>{entry.date}</td>
+                          <td className={styles.reason}>{entry.reason || '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </div>
           </div>
@@ -191,34 +193,36 @@ export default function AdminDashboard({ onClose, useTransactionSubcollection = 
               {deletedTransactions.length === 0 ? (
                 <div className={styles.empty}>No deleted transactions found.</div>
               ) : (
-                <table className={styles.table}>
-                  <thead>
-                    <tr>
-                      <th>Details</th>
-                      <th>Amount</th>
-                      <th>Date</th>
-                      <th>Reason</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {deletedTransactions.map((entry) => (
-                      <tr key={entry.id} className={styles.row}>
-                        <td className={styles.details}>{entry.details}</td>
-                        <td className={Number(entry.amount) >= 0 ? styles.amtPos : styles.amtNeg}>
-                          {Number(entry.amount) >= 0 ? '+' : ''}{entry.amount}
-                        </td>
-                        <td className={styles.date}>{entry.date}</td>
-                        <td className={styles.reason}>{entry.reason || '—'}</td>
-                        <td className={styles.actions}>
-                          <button className={styles.restoreBtn} onClick={() => handleRestore(entry.id)}>
-                            Restore
-                          </button>
-                        </td>
+                <div className={styles.tableScroll}>
+                  <table className={styles.table}>
+                    <thead>
+                      <tr>
+                        <th>Details</th>
+                        <th>Amount</th>
+                        <th>Date</th>
+                        <th>Reason</th>
+                        <th></th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {deletedTransactions.map((entry) => (
+                        <tr key={entry.id} className={styles.row}>
+                          <td className={styles.details}>{entry.details}</td>
+                          <td className={Number(entry.amount) >= 0 ? styles.amtPos : styles.amtNeg}>
+                            {Number(entry.amount) >= 0 ? '+' : ''}{entry.amount}
+                          </td>
+                          <td className={styles.date}>{entry.date}</td>
+                          <td className={styles.reason}>{entry.reason || '—'}</td>
+                          <td className={styles.actions}>
+                            <button className={styles.restoreBtn} onClick={() => handleRestore(entry.id)}>
+                              Restore
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </div>
           </div>
@@ -227,3 +231,4 @@ export default function AdminDashboard({ onClose, useTransactionSubcollection = 
     </div>
   );
 }
+
