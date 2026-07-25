@@ -108,3 +108,32 @@
   animation: spin 0.7s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+.forgotLink {
+  align-self: flex-end;
+  background: none; border: none;
+  color: var(--accent); font-size: 12px; font-weight: 600;
+  font-family: var(--font);
+  padding: 2px 0; margin-top: 2px;
+  cursor: pointer;
+}
+.forgotLink:hover { text-decoration: underline; }
+
+.backLink {
+  background: none; border: none;
+  color: var(--muted); font-size: 13px; font-weight: 600;
+  font-family: var(--font);
+  padding: 4px 0;
+  cursor: pointer;
+  text-align: center;
+}
+.backLink:hover { color: var(--text); text-decoration: underline; }
+
+.resetSuccess {
+  display: flex; flex-direction: column; gap: 20px;
+  text-align: center;
+}
+.resetSuccess p {
+  color: var(--muted); font-size: 14px; line-height: 1.6;
+}
+.resetSuccess p strong { color: var(--text); }

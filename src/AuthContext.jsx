@@ -5,7 +5,8 @@ import {
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
   onAuthStateChanged,
-  updateProfile
+  updateProfile,
+  sendPasswordResetEmail
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 
@@ -119,8 +120,21 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const resetPassword = async (email) => {
+    try {
+      await sendPasswordResetEmail(auth, email);
+      return { success: true };
+    } catch (err) {
+      const code = err?.code || '';
+      if (code === 'auth/invalid-email') return { error: 'Invalid email address.' };
+      if (code === 'auth/user-not-found') return { success: true }; // avoid leaking which emails are registered
+      if (code === 'auth/too-many-requests') return { error: 'Too many attempts. Try again later.' };
+      return { error: 'Unable to send reset email. Try again.' };
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, register, logout, resetPassword, loading }}>
       {children}
     </AuthContext.Provider>
   );

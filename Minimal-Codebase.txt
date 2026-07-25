@@ -159,28 +159,30 @@ export default function AdminDashboard({ onClose, useTransactionSubcollection = 
               {activeTransactions.length === 0 ? (
                 <div className={styles.empty}>No active transactions found.</div>
               ) : (
-                <table className={styles.table}>
-                  <thead>
-                    <tr>
-                      <th>Details</th>
-                      <th>Amount</th>
-                      <th>Date</th>
-                      <th>Reason</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {activeTransactions.map((entry) => (
-                      <tr key={entry.id} className={styles.row}>
-                        <td className={styles.details}>{entry.details}</td>
-                        <td className={Number(entry.amount) >= 0 ? styles.amtPos : styles.amtNeg}>
-                          {Number(entry.amount) >= 0 ? '+' : ''}{entry.amount}
-                        </td>
-                        <td className={styles.date}>{entry.date}</td>
-                        <td className={styles.reason}>{entry.reason || '—'}</td>
+                <div className={styles.tableScroll}>
+                  <table className={styles.table}>
+                    <thead>
+                      <tr>
+                        <th>Details</th>
+                        <th>Amount</th>
+                        <th>Date</th>
+                        <th>Reason</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {activeTransactions.map((entry) => (
+                        <tr key={entry.id} className={styles.row}>
+                          <td className={styles.details}>{entry.details}</td>
+                          <td className={Number(entry.amount) >= 0 ? styles.amtPos : styles.amtNeg}>
+                            {Number(entry.amount) >= 0 ? '+' : ''}{entry.amount}
+                          </td>
+                          <td className={styles.date}>{entry.date}</td>
+                          <td className={styles.reason}>{entry.reason || '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </div>
           </div>
@@ -194,34 +196,36 @@ export default function AdminDashboard({ onClose, useTransactionSubcollection = 
               {deletedTransactions.length === 0 ? (
                 <div className={styles.empty}>No deleted transactions found.</div>
               ) : (
-                <table className={styles.table}>
-                  <thead>
-                    <tr>
-                      <th>Details</th>
-                      <th>Amount</th>
-                      <th>Date</th>
-                      <th>Reason</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {deletedTransactions.map((entry) => (
-                      <tr key={entry.id} className={styles.row}>
-                        <td className={styles.details}>{entry.details}</td>
-                        <td className={Number(entry.amount) >= 0 ? styles.amtPos : styles.amtNeg}>
-                          {Number(entry.amount) >= 0 ? '+' : ''}{entry.amount}
-                        </td>
-                        <td className={styles.date}>{entry.date}</td>
-                        <td className={styles.reason}>{entry.reason || '—'}</td>
-                        <td className={styles.actions}>
-                          <button className={styles.restoreBtn} onClick={() => handleRestore(entry.id)}>
-                            Restore
-                          </button>
-                        </td>
+                <div className={styles.tableScroll}>
+                  <table className={styles.table}>
+                    <thead>
+                      <tr>
+                        <th>Details</th>
+                        <th>Amount</th>
+                        <th>Date</th>
+                        <th>Reason</th>
+                        <th></th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {deletedTransactions.map((entry) => (
+                        <tr key={entry.id} className={styles.row}>
+                          <td className={styles.details}>{entry.details}</td>
+                          <td className={Number(entry.amount) >= 0 ? styles.amtPos : styles.amtNeg}>
+                            {Number(entry.amount) >= 0 ? '+' : ''}{entry.amount}
+                          </td>
+                          <td className={styles.date}>{entry.date}</td>
+                          <td className={styles.reason}>{entry.reason || '—'}</td>
+                          <td className={styles.actions}>
+                            <button className={styles.restoreBtn} onClick={() => handleRestore(entry.id)}>
+                              Restore
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </div>
           </div>
@@ -230,6 +234,7 @@ export default function AdminDashboard({ onClose, useTransactionSubcollection = 
     </div>
   );
 }
+
 
 == FILE: C:\Users\Admin\Documents\Lenet\money-tracker\src\adminService.js ==
 
@@ -867,9 +872,16 @@ export default function Dashboard() {
   const [showAdminView, setShowAdminView] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
-  const [showIosHint, setShowIosHint] = useState(false);
+  const [showInstallHint, setShowInstallHint] = useState(false);
   const isAdmin = user?.isAdmin === true;
-  const { canInstall, promptInstall, isInstalled, isIos } = useInstallPrompt();
+  const { canInstall, promptInstall, isInstalled, platform } = useInstallPrompt();
+
+  const installHintText = {
+    ios: 'Tap the Share icon in Safari, then "Add to Home Screen".',
+    android: 'Open the browser menu (⋮) and tap "Install app" or "Add to Home screen".',
+    desktop: 'Click the install icon in your browser\'s address bar, or open the browser menu and choose "Install IponTrack…".',
+    other: 'Open your browser menu and look for "Install app" or "Add to Home screen".',
+  }[platform];
 
   useEffect(() => {
     const handleResize = () => {
@@ -882,11 +894,14 @@ export default function Dashboard() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const handleInstallClick = () => {
+  const handleInstallClick = async () => {
     if (canInstall) {
-      promptInstall();
-    } else if (isIos) {
-      setShowIosHint(true);
+      await promptInstall();
+    } else {
+      // No native prompt available (common on first visits, iOS Safari,
+      // or plain-http/local testing) — show manual steps instead of doing
+      // nothing.
+      setShowInstallHint((current) => !current);
     }
   };
 
@@ -935,15 +950,15 @@ export default function Dashboard() {
           <button className={styles.navItem + ' ' + styles.navActive}><Wallet size={16}/>Overview</button>
         </nav>
 
-        {!isInstalled && (canInstall || isIos) && (
+        {!isInstalled && (
           <div className={styles.installWrap}>
             <button className={styles.installBtn} onClick={handleInstallClick}>
               <Download size={14}/> Install App
             </button>
-            {showIosHint && (
+            {showInstallHint && (
               <div className={styles.iosHint}>
-                <p>To install: tap the <strong>Share</strong> icon in Safari, then <strong>"Add to Home Screen"</strong>.</p>
-                <button onClick={() => setShowIosHint(false)}>Got it</button>
+                <p>{installHintText}</p>
+                <button onClick={() => setShowInstallHint(false)}>Got it</button>
               </div>
             )}
           </div>
@@ -959,6 +974,7 @@ export default function Dashboard() {
 
       {/* Main */}
       <main className={`${styles.main} ${!sidebarOpen ? styles.mainNoSidebar : ''}`}>
+      <div className={styles.mainInner}>
         <header className={styles.header}>
           <div className={styles.headerLeft}>
             <button className={styles.menuBtn} onClick={() => setSidebarOpen((current) => !current)}>
@@ -1047,32 +1063,34 @@ export default function Dashboard() {
                 <span>No deleted transactions found.</span>
               </div>
             ) : (
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th>Details</th>
-                    <th>Amount</th>
-                    <th>Date</th>
-                    <th>Reason</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {deletedFiltered.map(entry => (
-                    <tr key={entry.id} className={styles.row}>
-                      <td className={styles.details}>{entry.details}</td>
-                      <td className={Number(entry.amount) >= 0 ? styles.amtPos : styles.amtNeg}>
-                        {Number(entry.amount) >= 0 ? '+' : ''}{fmt(entry.amount)}
-                      </td>
-                      <td className={styles.date}>{entry.date}</td>
-                      <td className={styles.reason}>{entry.reason || '—'}</td>
-                      <td className={styles.actions}>
-                        <button className={styles.restoreBtn} onClick={() => restoreTransaction(entry.id)} title="Restore">Restore</button>
-                      </td>
+              <div className={styles.tableScroll}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Details</th>
+                      <th>Amount</th>
+                      <th>Date</th>
+                      <th>Reason</th>
+                      <th></th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {deletedFiltered.map(entry => (
+                      <tr key={entry.id} className={styles.row}>
+                        <td className={styles.details}>{entry.details}</td>
+                        <td className={Number(entry.amount) >= 0 ? styles.amtPos : styles.amtNeg}>
+                          {Number(entry.amount) >= 0 ? '+' : ''}{fmt(entry.amount)}
+                        </td>
+                        <td className={styles.date}>{entry.date}</td>
+                        <td className={styles.reason}>{entry.reason || '—'}</td>
+                        <td className={styles.actions}>
+                          <button className={styles.restoreBtn} onClick={() => restoreTransaction(entry.id)} title="Restore">Restore</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )
           ) : (
             filtered.length === 0 ? (
@@ -1081,38 +1099,41 @@ export default function Dashboard() {
                 <button onClick={() => setModal('add')}>+ Add your first entry</button>
               </div>
             ) : (
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th>Details</th>
-                    <th>Amount</th>
-                    <th>Date</th>
-                    <th>Reason</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map(entry => (
-                    <tr key={entry.id} className={styles.row}>
-                      <td className={styles.details}>{entry.details}</td>
-                      <td className={Number(entry.amount) >= 0 ? styles.amtPos : styles.amtNeg}>
-                        {Number(entry.amount) >= 0 ? '+' : ''}{fmt(entry.amount)}
-                      </td>
-                      <td className={styles.date}>{entry.date}</td>
-                      <td className={styles.reason}>{entry.reason || '—'}</td>
-                      <td className={styles.actions}>
-                        <button className={styles.editBtn} onClick={() => setModal({ entry })} title="Edit"><Edit2 size={14}/></button>
-                        <button className={styles.delBtn} onClick={() => { if (confirm('Delete this entry?')) deleteEntry(entry.id); }} title="Delete"><Trash2 size={14}/></button>
-                      </td>
+              <div className={styles.tableScroll}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Details</th>
+                      <th>Amount</th>
+                      <th>Date</th>
+                      <th>Reason</th>
+                      <th></th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {filtered.map(entry => (
+                      <tr key={entry.id} className={styles.row}>
+                        <td className={styles.details}>{entry.details}</td>
+                        <td className={Number(entry.amount) >= 0 ? styles.amtPos : styles.amtNeg}>
+                          {Number(entry.amount) >= 0 ? '+' : ''}{fmt(entry.amount)}
+                        </td>
+                        <td className={styles.date}>{entry.date}</td>
+                        <td className={styles.reason}>{entry.reason || '—'}</td>
+                        <td className={styles.actions}>
+                          <button className={styles.editBtn} onClick={() => setModal({ entry })} title="Edit"><Edit2 size={14}/></button>
+                          <button className={styles.delBtn} onClick={() => { if (confirm('Delete this entry?')) deleteEntry(entry.id); }} title="Delete"><Trash2 size={14}/></button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )
           )}
         </div>
           </>
         )}
+      </div>
       </main>
 
       {modal && (
@@ -1495,6 +1516,77 @@ export default function Dashboard() {
   padding: 6px 12px; border-radius: 8px;
   width: 100%;
 }
+/* ============================================================
+   MOBILE SIZING + DESKTOP CENTERING FIX
+   Paste these rules into src/Dashboard.module.css.
+   They REPLACE the old .main rule and the old @media blocks at
+   the bottom of the file — see instructions below.
+   ============================================================ */
+
+/* ---- 1. Replace the existing .main rule with this ---- */
+.main {
+  flex: 1;
+  margin-left: 220px;
+  padding: 32px 36px;
+  position: relative; z-index: 1;
+  animation: fadeUp 0.4s ease;
+  display: flex;
+  justify-content: center;   /* centers content on wide desktop screens */
+  min-width: 0;               /* allows flex child to shrink instead of overflowing */
+}
+
+/* NEW — the actual content now lives inside this, capped and centered */
+.mainInner {
+  width: 100%;
+  max-width: 1100px;
+  min-width: 0;
+}
+
+/* ---- 2. Table horizontal scroll instead of clipping/overflowing the page ---- */
+.tableScroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.tableScroll .table {
+  min-width: 640px; /* keeps columns readable; scrolls instead of squeezing/overflowing */
+}
+
+/* ---- 3. Replace the two @media blocks at the bottom of the file with these ---- */
+@media (max-width: 900px) {
+  .sidebar {
+    width: 220px;
+    padding: 20px 16px;
+  }
+  .main {
+    margin-left: 0;
+    padding: 20px 18px;
+  }
+  .stats { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+  .sidebar {
+    width: 220px;
+    padding: 20px 16px;
+  }
+  .main { margin-left: 0; padding: 16px 14px; }
+  .header { flex-direction: column; gap: 12px; align-items: stretch; }
+  .headerActions { flex-wrap: wrap; }
+  .headerActions button { flex: 1 1 auto; justify-content: center; }
+  .tableControls { flex-direction: column; align-items: stretch; }
+  .searchBox { width: 100%; }
+  .searchBox input { width: 100%; }
+  .greeting { font-size: 21px; }
+  .statValue { font-size: 21px; }
+  .adminSummary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .adminControls { align-items: stretch; }
+  .adminSelect { min-width: 0; width: 100%; }
+}
+
+@media (max-width: 380px) {
+  .greeting { font-size: 19px; }
+  .statCard { padding: 18px 16px; }
+}
 
 == FILE: C:\Users\Admin\Documents\Lenet\money-tracker\src\EntryModal.jsx ==
 
@@ -1869,6 +1961,15 @@ input, select { outline: none; }
   0%, 100% { box-shadow: 0 0 20px rgba(124,107,255,0.3); }
   50% { box-shadow: 0 0 40px rgba(124,107,255,0.6); }
 }
+/* Add this near the top of src/index.css, right after the
+   `html, body, #root { height: 100%; }` rule.
+   Prevents any stray wide element from ever pushing the page sideways
+   and triggering the browser's "shrink to fit" zoom-out behavior. */
+
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+}
 
 == FILE: C:\Users\Admin\Documents\Lenet\money-tracker\src\main.jsx ==
 
@@ -1970,25 +2071,30 @@ export default function OfflineBanner() {
 import { useEffect, useState } from 'react';
 
 // Captures the browser's `beforeinstallprompt` event so we can trigger the
-// native "Install app" dialog from our own UI (the sidebar button), instead
-// of relying on the browser's built-in address-bar icon.
+// native "Install app" dialog from our own UI.
 //
-// Notes on platform support:
-// - Android Chrome / Edge: fires `beforeinstallprompt`, `promptInstall()` works.
-// - Desktop Chrome / Edge: same as above.
-// - iOS Safari: does NOT support `beforeinstallprompt` at all. There is no
-//   programmatic install API on iOS — the user has to use
-//   Share -> "Add to Home Screen" manually. We detect this case separately
-//   so the UI can show instructions instead of a broken button.
+// IMPORTANT: `beforeinstallprompt` is unreliable by design — Chrome only
+// fires it after its own internal "engagement" heuristics are satisfied
+// (varies by visit count/time on site), and only over HTTPS or localhost.
+// It NEVER fires on iOS Safari, and it never fires again once the app is
+// installed. That means we can't just hide the button until the event
+// shows up — most first-time visitors would never see it. Instead we
+// always show the button (unless already installed) and fall back to
+// platform-specific manual instructions when no native prompt is available.
 export default function useInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [isInstalled, setIsInstalled] = useState(false);
-  const [isIos, setIsIos] = useState(false);
+  const [platform, setPlatform] = useState('other'); // 'ios' | 'android' | 'desktop' | 'other'
 
   useEffect(() => {
     const ua = window.navigator.userAgent;
-    const iosDevice = /iphone|ipad|ipod/i.test(ua);
-    setIsIos(iosDevice);
+    if (/iphone|ipad|ipod/i.test(ua)) {
+      setPlatform('ios');
+    } else if (/android/i.test(ua)) {
+      setPlatform('android');
+    } else {
+      setPlatform('desktop');
+    }
 
     const standalone =
       window.matchMedia('(display-mode: standalone)').matches ||
@@ -2006,21 +2112,39 @@ export default function useInstallPrompt() {
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', handleAppInstalled);
+
+    // Dev helper: if you're testing and the button click keeps falling back
+    // to instructions, open devtools console — this tells you whether
+    // Chrome ever actually fired the event.
+    const timer = setTimeout(() => {
+      if (!deferredPrompt) {
+        console.info(
+          '[PWA] beforeinstallprompt has not fired yet. This is normal on ' +
+          'first visits / over plain http — it will not fire at all on iOS ' +
+          'Safari, or if the manifest/service worker requirements are not ' +
+          'met, or once the app is already installed.'
+        );
+      }
+    }, 3000);
+
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
+      clearTimeout(timer);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const promptInstall = async () => {
-    if (!deferredPrompt) return;
+    if (!deferredPrompt) return false;
     deferredPrompt.prompt();
-    await deferredPrompt.userChoice;
+    const { outcome } = await deferredPrompt.userChoice;
     setDeferredPrompt(null);
+    return outcome === 'accepted';
   };
 
-  // canInstall: a real one-tap install is available right now.
+  // A real one-tap native install is available right now.
   const canInstall = Boolean(deferredPrompt) && !isInstalled;
 
-  return { canInstall, promptInstall, isInstalled, isIos };
+  return { canInstall, promptInstall, isInstalled, platform };
 }
